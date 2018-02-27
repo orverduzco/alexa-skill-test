@@ -1,0 +1,225 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "wize pizza bot",
+            "intents": [
+                {
+                    "name": "AddOrder",
+                    "slots": [
+                        {
+                            "name": "ingredient",
+                            "type": "INGREDIENTS_TYPE",
+                            "samples": [
+                                "{ingredient}",
+                                "{ingredient} please",
+                                "with {ingredient}"
+                            ]
+                        },
+                        {
+                            "name": "thickness",
+                            "type": "CRUST_THICKNESSES_TYPE",
+                            "samples": [
+                                "{thickness}",
+                                "{thickness} please",
+                                "with {thickness} crust",
+                                "{thickness} crust"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "order a {ingredient} pizza with {thickness} crust",
+                        "I want a {ingredient} pizza with {thickness} crust",
+                        "order an {ingredient} pizza with {thickness} crust",
+                        "I want an {ingredient} pizza with {thickness} crust",
+                        "order a pizza with {ingredient} and {thickness} crust",
+                        "I want a pizza with {ingredient} and {thickness} crust"
+                    ]
+                },
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "GetOrderInfo",
+                    "slots": [
+                        {
+                            "name": "orderNumber",
+                            "type": "AMAZON.NUMBER",
+                            "samples": [
+                                "{orderNumber}",
+                                "order {orderNumber}",
+                                "order number {orderNumber}"
+                            ]
+                        }
+                    ],
+                    "samples": [
+                        "how is order number {orderNumber} going",
+                        "tell me about order number {orderNumber}",
+                        "which is order number {orderNumber}",
+                        "get details on order number {orderNumber}"
+                    ]
+                }
+            ],
+            "types": [
+                {
+                    "values": [
+                        {
+                            "id": "THIN",
+                            "name": {
+                                "value": "thin",
+                                "synonyms": [
+                                    "slim",
+                                    "crunchy",
+                                    "light",
+                                    "small"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "THICK",
+                            "name": {
+                                "value": "thick",
+                                "synonyms": [
+                                    "wide",
+                                    "big"
+                                ]
+                            }
+                        }
+                    ],
+                    "name": "CRUST_THICKNESSES_TYPE"
+                },
+                {
+                    "values": [
+                        {
+                            "id": "PEPPERONI",
+                            "name": {
+                                "value": "pepperoni",
+                                "synonyms": [
+                                    "pepperoni sausage"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "MUSHROOMS",
+                            "name": {
+                                "value": "mushrooms",
+                                "synonyms": [
+                                    "mushroom",
+                                    "shroom",
+                                    "shrooms"
+                                ]
+                            }
+                        },
+                        {
+                            "id": "ONION",
+                            "name": {
+                                "value": "onion",
+                                "synonyms": []
+                            }
+                        },
+                        {
+                            "id": "PINEAPPLE",
+                            "name": {
+                                "value": "pineapple",
+                                "synonyms": []
+                            }
+                        }
+                    ],
+                    "name": "INGREDIENTS_TYPE"
+                }
+            ]
+        },
+        "dialog": {
+            "intents": [
+                {
+                    "name": "AddOrder",
+                    "confirmationRequired": false,
+                    "slots": [
+                        {
+                            "name": "ingredient",
+                            "type": "INGREDIENTS_TYPE",
+                            "elicitationRequired": true,
+                            "confirmationRequired": false,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-AddOrder.IntentSlot-ingredient"
+                            }
+                        },
+                        {
+                            "name": "thickness",
+                            "type": "CRUST_THICKNESSES_TYPE",
+                            "elicitationRequired": true,
+                            "confirmationRequired": false,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-AddOrder.IntentSlot-thickness"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "name": "GetOrderInfo",
+                    "confirmationRequired": false,
+                    "slots": [
+                        {
+                            "name": "orderNumber",
+                            "type": "AMAZON.NUMBER",
+                            "elicitationRequired": true,
+                            "confirmationRequired": false,
+                            "prompts": {
+                                "elicitation": "Elicit.Intent-GetOrderInfo.IntentSlot-orderNumber"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        "prompts": [
+            {
+                "id": "Elicit.Intent-AddOrder.IntentSlot-ingredient",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "What ingredient?"
+                    },
+                    {
+                        "type": "PlainText",
+                        "value": "Which ingredient?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Intent-AddOrder.IntentSlot-thickness",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "what crust thickness?"
+                    },
+                    {
+                        "type": "PlainText",
+                        "value": "which crust thickness?"
+                    },
+                    {
+                        "type": "PlainText",
+                        "value": "how thick would you like your crust?"
+                    }
+                ]
+            },
+            {
+                "id": "Elicit.Intent-GetOrderInfo.IntentSlot-orderNumber",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "which order number?"
+                    }
+                ]
+            }
+        ]
+    }
+}
