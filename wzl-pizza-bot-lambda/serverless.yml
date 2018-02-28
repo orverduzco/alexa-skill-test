@@ -1,0 +1,22 @@
+service: wzl-pizza-bot-orverduzco
+
+provider:
+  name: aws
+  region: us-west-2
+  runtime: nodejs6.10
+
+iamRoleStatements:
+  - Effect: "Allow"
+    Action: 
+      - dynamodb:Query
+      - dynamodb:Scan
+      - dynamodb:GetItem
+      - dynamodb:PutItem
+      - dynamodb:UpdateItem
+      - dynamodb:DeleteItem
+    Resource: "arn:aws:dynamodb:us-west-2:087034483246:table/wizeline-pizza-bot-orders"
+functions:
+  mySkill:
+    handler: handler.handler
+    events:
+      - alexaSkill
