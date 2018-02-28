@@ -52,19 +52,17 @@
                     "slots": [
                         {
                             "name": "orderNumber",
-                            "type": "AMAZON.NUMBER",
-                            "samples": [
-                                "{orderNumber}",
-                                "order {orderNumber}",
-                                "order number {orderNumber}"
-                            ]
+                            "type": "AMAZON.NUMBER"
                         }
                     ],
                     "samples": [
                         "how is order number {orderNumber} going",
                         "tell me about order number {orderNumber}",
                         "which is order number {orderNumber}",
-                        "get details on order number {orderNumber}"
+                        "get details on order number {orderNumber}",
+                        "get me order {orderNumber}",
+                        "order number {orderNumber}",
+                        "give me order {orderNumber}"
                     ]
                 }
             ],
