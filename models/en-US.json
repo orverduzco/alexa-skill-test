@@ -27,6 +27,8 @@
                         }
                     ],
                     "samples": [
+                        "order a pizza",
+                        "I want a pizza",
                         "order a {ingredient} pizza with {thickness} crust",
                         "I want a {ingredient} pizza with {thickness} crust",
                         "order an {ingredient} pizza with {thickness} crust",
@@ -56,6 +58,9 @@
                         }
                     ],
                     "samples": [
+                        "track order",
+                        "track order {orderNumber}",
+                        "track order number {orderNumber}",
                         "how is order number {orderNumber} going",
                         "tell me about order number {orderNumber}",
                         "which is order number {orderNumber}",
@@ -139,7 +144,10 @@
             "intents": [
                 {
                     "name": "AddOrder",
-                    "confirmationRequired": false,
+                    "confirmationRequired": true,
+                    "prompts": {
+                        "confirmation": "Confirm.Intent-AddOrder"
+                    },
                     "slots": [
                         {
                             "name": "ingredient",
@@ -206,6 +214,15 @@
                     {
                         "type": "PlainText",
                         "value": "how thick would you like your crust?"
+                    }
+                ]
+            },
+            {
+                "id": "Confirm.Intent-AddOrder",
+                "variations": [
+                    {
+                        "type": "PlainText",
+                        "value": "You asked for a {thickness} crust {ingredient} pizza. It will be two dollars. Is that okay?"
                     }
                 ]
             },

@@ -86,8 +86,21 @@ function getOrder( context ) {
     }
 }
 
+function getOptionList( options ) {
+    if ( options.length === 1 ) {
+        return options[0];
+    } else if ( options.length === 2 ) {
+        return `${ options[0] } and ${ options[1] }`;
+    }
+
+    return options.slice( 0, -1 ).join( ', ' ) + ' and ' + options.slice( -1 )
+}
+
 function orderPizza( context ) {
-    const slots = context.event.request.intent.slots;
+    const confirmation     = context.event.request.intent.confirmationStatus;
+    const slots            = context.event.request.intent.slots;
+    const validIngredients = [ 'pepperoni', 'mushrooms', 'onion', 'pineapple' ];
+    const validThicknesses = [ 'thin', 'thick' ];
 
     if ( !slots.ingredient.value || !slots.thickness.value ) {
         // Some slots are missing.
@@ -102,7 +115,30 @@ function orderPizza( context ) {
             },
             "sessionAttributes": {}
         } );
-    } else {    
+    } else if ( !slots.ingredient.resolutions || !slots.ingredient.resolutions.resolutionsPerAuthority || !slots.ingredient.resolutions.resolutionsPerAuthority[0].values || validIngredients.indexOf( slots.ingredient.resolutions.resolutionsPerAuthority[0].values[0].value.name.toLowerCase() ) < 0 ) {
+        // The ingredient slot isn't valid
+        context.emit( ':elicitSlot', 'ingredient', `We don't have ${ slots.ingredient.value } pizza. We only have ${ getOptionList( validIngredients ) }.` );
+    } else if ( !slots.thickness.resolutions || !slots.thickness.resolutions.resolutionsPerAuthority || !slots.thickness.resolutions.resolutionsPerAuthority[0].values || validThicknesses.indexOf( slots.thickness.resolutions.resolutionsPerAuthority[0].values[0].value.name.toLowerCase() ) < 0 ) {
+        // The thickness slot isn't valid.
+        context.emit( ':elicitSlot', 'thickness', `We don't have ${ slots.thickness.value } crust. We only have ${ getOptionList( validThicknesses ) }.` );
+    } else if ( confirmation === 'NONE' ) {
+        // The Slots are valid, but confirmation is needed.
+        context.context.succeed( {
+            "response": {
+                "directives": [
+                    {
+                        "type": "Dialog.Delegate"
+                    }
+                ],
+                "shouldEndSession": false
+            },
+            "sessionAttributes": {}
+        } );
+    } else if ( confirmation === 'DENIED') {
+        // Confirmation was denied; cancel order.
+        context.emit( 'AMAZON.CancelIntent' );
+    } else {
+        // The Slots are valid and the Intent was confirmed.
         const ingredient = slots.ingredient.resolutions.resolutionsPerAuthority[0].values[0].value.name;
         const thickness  = slots.thickness.resolutions.resolutionsPerAuthority[0].values[0].value.name;
 
@@ -178,6 +214,9 @@ function orderPizza( context ) {
             });
         });
     }
+
+    // Emit unhandled if nothing matched.
+    context.emit( 'Unhandled' );
 }
 
 let handlers = {
@@ -195,7 +234,7 @@ let handlers = {
         this.emit(':responseReady');
     },
     'AMAZON.HelpIntent' : function() {
-        this.response.speak("You can try: 'alexa, wize pizza bot' or 'alexa, ask wize pizza bot for a pizza with pepperoni and thin crust");
+        this.response.speak("You can try: 'alexa, open wize pizza bot' or 'alexa, tell wize pizza bot to order a pizza with pepperoni and thin crust");
         this.emit(':responseReady');
     },
     'AMAZON.CancelIntent' : function() {
@@ -203,7 +242,7 @@ let handlers = {
         this.emit(':responseReady');
     },
     'Unhandled' : function() {
-        this.response.speak("Sorry, I didn't get that. You can try: 'alexa, wize pizza bot'" +
-            " or 'alexa, ask wize pizza bot for a pizza with pepperoni and thin crust'");
+        this.response.speak("Sorry, I didn't get that. You can try: 'alexa, open wize pizza bot' or 'alexa, tell wize pizza bot to order a pizza with pepperoni and thin crust'");
+        this.emit(':responseReady');
     }
 };
