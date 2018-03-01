@@ -137,7 +137,7 @@ function orderPizza( context ) {
     } else if ( confirmation === 'DENIED') {
         // Confirmation was denied; cancel order.
         context.emit( 'AMAZON.CancelIntent' );
-    } else {
+    } else if ( confirmation === 'CONFIRMED' ) {
         // The Slots are valid and the Intent was confirmed.
         const ingredient = slots.ingredient.resolutions.resolutionsPerAuthority[0].values[0].value.name;
         const thickness  = slots.thickness.resolutions.resolutionsPerAuthority[0].values[0].value.name;
@@ -213,10 +213,10 @@ function orderPizza( context ) {
                 }
             });
         });
+    } else {
+        // Emit unhandled if nothing matched.
+        context.emit( 'Unhandled' );
     }
-
-    // Emit unhandled if nothing matched.
-    context.emit( 'Unhandled' );
 }
 
 let handlers = {
