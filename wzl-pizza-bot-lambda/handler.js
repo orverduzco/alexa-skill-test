@@ -1,8 +1,6 @@
 'use strict'
 const Alexa = require('alexa-sdk')
-const AWS = require('aws-sdk')
-const DDB = new AWS.DynamoDB({ apiVersion: '2012-08-10' })
-AWS.config.update({ region: 'us-west-2' })
+const ddb = require('./db/dynamoHandler')
 
 module.exports.handler = (event, context, callback) => {
   let alexa = Alexa.handler(event, context)
@@ -29,48 +27,34 @@ function orderPizza (context) {
     })
   } else {
     // fetch the latest track number and add to it.
-    const getLastOrder = new Promise((resolve, reject) => {
-      const countParams = {
-        TableName: 'wizeline-pizza-bot-orders'
-      }
-
-      DDB.scan(countParams, (err, data) => {
-        if (err) reject(err)
-        resolve(data.Items.length)
-      })
-    })
-
-    getLastOrder
+    ddb.getLastOrder()
     .then(result => {
       console.log('orders:', result)
-      const latestOrder = result // hardcode for now.
-      const newOrderId = latestOrder + 1
+      const lastOrder = result // hardcode for now.
+      const newOrderId = lastOrder + 1
       const ingredient = slots.ingredient.value
       const thickness = slots.thickness.value
 
-      const params = {
-        TableName: 'wizeline-pizza-bot-orders',
-        Item: {
-          'ORDER_ID': { N: `${newOrderId}` },
-          'INGREDIENTS': { S: ingredient },
-          'CRUST': { S: thickness },
-          'DELIVERED': { BOOL: false },
-          'COOKED': { BOOL: false }
-        }
+      const item = {
+        'ORDER_ID': { N: `${newOrderId}` },
+        'INGREDIENTS': { S: ingredient },
+        'CRUST': { S: thickness },
+        'DELIVERED': { BOOL: false },
+        'COOKED': { BOOL: false }
       }
 
-      // Call DynamoDB to add the item to the table
-      DDB.putItem(params, function (err, data) {
-        if (err) {
-          console.log('error')
-          console.error(err)
-          context.emit(':tell', 'Sorry, we couldn\'t take your order.')
-        } else {
-          console.log('saved! ')
-          context.response.cardRenderer(`Wize Pizza Bot–Order #${newOrderId}`, `Successfully ordered a ${thickness} ${ingredient} pizza.`)
-          context.response.speak(`We've received your order. Your pizza order is number ${newOrderId}.`)
-          context.emit(':responseReady')
-        }
+      // store item into db
+      ddb.store(item)
+      .then(result => {
+        console.log('saved! ')
+        context.response.cardRenderer(`Wize Pizza Bot–Order #${newOrderId}`, `Successfully ordered a ${thickness} ${ingredient} pizza.`)
+        context.response.speak(`We've received your order. Your pizza order is number ${newOrderId}.`)
+        context.emit(':responseReady')
+      })
+      .catch(reason => {
+        console.log('error')
+        console.error(reason)
+        context.emit(':tell', 'Sorry, we couldn\'t take your order.')
       })
     })
     .catch(reason => {
