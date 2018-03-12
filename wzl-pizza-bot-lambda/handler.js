@@ -30,7 +30,7 @@ function orderPizza (context) {
     ddb.getLastOrder()
     .then(result => {
       console.log('orders:', result)
-      const lastOrder = result // hardcode for now.
+      const lastOrder = result
       const newOrderId = lastOrder + 1
       const ingredient = slots.ingredient.value
       const thickness = slots.thickness.value
@@ -65,10 +65,11 @@ function orderPizza (context) {
   }
 }
 
-function orderPizzaBak(context) {
+function getOrderInfo (context) {
   const slots = context.event.request.intent.slots
+  console.log('slots: ', slots)
 
-  if (!slots.ingredient.value || !slots.thickness.value) {
+  if (!slots.orderNumber.value) {
     // Some slots are missing.
     context.context.succeed({
       'response': {
@@ -82,78 +83,18 @@ function orderPizzaBak(context) {
       'sessionAttributes': {}
     })
   } else {
-    const ingredient = slots.ingredient.value
-    const thickness = slots.thickness.value
-
-    console.log(`Connecting to DB: ${databaseUri}`)
-    mongoose.connect(databaseUri)
-    mongoose.Promise = global.Promise
-
-    let db = mongoose.connection
-    let Schema = mongoose.Schema
-
-    db.on('error', console.error.bind(console, 'MongoDB connection error: '))
-
-    let orderSchema = new Schema({
-      orderId: {
-        type: Number,
-        default: 1
-      },
-      ingredients: {
-        type: String,
-        default: ''
-      },
-      crust: {
-        type: String,
-        default: ''
-      },
-      delivered: {
-        type: Boolean,
-        default: false
-      },
-      cooked: {
-        type: Boolean,
-        default: false
-      }
+    ddb.getOrderInfo(slots.orderNumber.value)
+    .then(result => {
+      const {ingredients, hasBeenCooked, hasBeenDelivered, crust} = result
+      console.log('order tracked.')
+      context.response.cardRenderer(`Wize Pizza Bot–Order #${slots.orderNumber.value}`)
+      context.response.speak(`We've tracked your order. It is a ${ingredients} pizza with ${crust} crust, that ${hasBeenCooked} been cooked and ${hasBeenDelivered} been delivered.`)
+      context.emit(':responseReady')
     })
-
-    let orderModel = mongoose.model('PizzaOrders', orderSchema)
-
-    orderSchema.pre('save', function (next) {
-      // Only increment on new Order.
-      if (this.isNew) {
-        orderModel.count().then(quantity => {
-          // Increment count
-          this.orderId = 10 + quantity
-          next()
-        })
-      } else {
-        next()
-      }
-    })
-
-    let pizza = new orderModel({
-      orderId: 0,
-      ingredients: ingredient,
-      crust: thickness,
-      delivered: false,
-      cooked: false
-    })
-
-    console.log(`New Order: ${JSON.stringify([ingredient, thickness])}`)
-
-    pizza.save((err, savedPizza) => {
-      console.log('saved?')
-      if (err) {
-        console.log('error')
-        console.error(err)
-        context.emit(':tell', 'Sorry, we couldn\'t take your order.')
-      } else {
-        console.log('saved! ' + savedPizza)
-        context.response.cardRenderer(`Wize Pizza Bot – Order #${savedPizza.orderId}`, `Successfully ordered a ${savedPizza.crust} ${savedPizza.ingredients} pizza.`)
-        context.response.speak(`We've received your order. Your pizza order is number ${savedPizza.orderId}.`)
-        context.emit(':responseReady')
-      }
+    .catch(reason => {
+      console.log('error')
+      console.error(reason)
+      context.emit(':tell', 'Sorry, we couldn\'t track your order.')
     })
   }
 }
@@ -164,6 +105,9 @@ let handlers = {
   },
   'AddOrder': function () {
     orderPizza(this)
+  },
+  'GetOrderInfo': function () {
+    getOrderInfo(this)
   },
   'AMAZON.StopIntent': function () {
     this.response.speak(`Ciao!`)
