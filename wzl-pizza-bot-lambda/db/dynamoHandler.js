@@ -1,10 +1,11 @@
 const AWS = require('aws-sdk')
 const DDB = new AWS.DynamoDB({ apiVersion: '2012-08-10' })
+const DDBDoc = new AWS.DynamoDB.DocumentClient()
 AWS.config.update({ region: 'us-west-2' })
 
 class DynamoHandler {
   constructor () {
-    this.table = 'wizeline-pizza-bot-orders'
+    this.table = 'wizeline-pizza-bot-orders-avargaz' // wizeline-pizza-bot-orders
   }
 
   getLastOrder () {
@@ -33,7 +34,7 @@ class DynamoHandler {
 
       DDB.query(params, (err, data) => {
         if (err) reject(err)
-        if (data.Items.length === 0) reject('Not found')
+        if (data.Items.length === 0) reject(new Error('Not found'))
         console.log(JSON.stringify(data.Items[0]))
         resolve(this._parseItem(data.Items[0]))
       })
@@ -41,10 +42,8 @@ class DynamoHandler {
   }
 
   _parseItem (item) {
-    let parsed = {}
     const ingredients = item.INGREDIENTS.S
-    const orderId = item.ORDER_ID.N
-    const hasBeenCooked = item.COOKED.BOOL ? 'has': 'has not'
+    const hasBeenCooked = item.COOKED.BOOL ? 'has' : 'has not'
     const hasBeenDelivered = item.DELIVERED.BOOL ? 'has' : 'has not'
     const crust = item.CRUST.S
     return {ingredients, hasBeenCooked, hasBeenDelivered, crust}
@@ -56,8 +55,30 @@ class DynamoHandler {
       Item: item
     }
 
-    return new Promise ((resolve, reject) => {
-      DDB.putItem(params, function (err, data) {
+    return new Promise((resolve, reject) => {
+      DDBDoc.put(params, function (err, data) {
+        if (err) {
+          reject(err)
+        } else {
+          resolve(data)
+        }
+      })
+    })
+  }
+
+  update (item, paymentMethod) {
+    const params = {
+      TableName: this.table,
+      Key: item,
+      UpdateExpression: 'set PAYMENT_METHOD = :s',
+      ExpressionAttributeValues: {
+        ':s': paymentMethod
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      console.log(JSON.stringify(params))
+      DDBDoc.update(params, function (err, data) {
         if (err) {
           reject(err)
         } else {
