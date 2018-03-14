@@ -1,4 +1,4 @@
-service: wzl-pizza-bot-orverduzco
+service: wzl-pizza-bot
 
 provider:
   name: aws
