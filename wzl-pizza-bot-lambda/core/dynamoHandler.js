@@ -14,7 +14,7 @@ class DynamoHandler {
         TableName: this.table
       }
 
-      DDB.scan(countParams, (err, data) => {
+      DDBDoc.scan(countParams, (err, data) => {
         if (err) reject(err)
         resolve(data.Items.length)
       })
